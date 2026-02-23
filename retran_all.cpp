@@ -22,7 +22,6 @@ const double return_fraction_of_removed = 0.10;
 
 // Output paths
 const string MENOPAUSE_OUT = "your path";
-const string TRAJ_DIR = "your path";
 
 // Exact integrated hazard for lambda(t)=lambda0*exp(k t) over [t, t+dt]
 inline double integrated_lambda(double t, double dt) {
@@ -87,7 +86,6 @@ void apply_proportional_change(int &N1, int &N2, int dN) {
     }
 }
 
-// writes trajectory 
 double simulate_menopause_age_population(mt19937 &rng, std::ofstream *traj_file) {
     double age = 0.0;
     int N1 = N0;
@@ -99,17 +97,6 @@ double simulate_menopause_age_population(mt19937 &rng, std::ofstream *traj_file)
     int removed_N2 = 0;
     const double p_target = 1e-3;   // smaller -> closer to event-by-event, slower
     const double dt_max   = 0.25;   // years
-
-    // ---- TRAJECTORY ----
-    // auto log_state = [&](double t, int a, int b) {
-    //     if (traj_file) (*traj_file) << t << "\t" << a << "\t" << b << "\n";
-    // };
-    //
-    // if (traj_file) {
-    //     (*traj_file) << "# age\tN1\tN2\n";
-    //     log_state(age, N1, N2);
-    // }
-    // -------------------------------------------
 
     const double EPS = 1e-12;
 
@@ -164,10 +151,6 @@ double simulate_menopause_age_population(mt19937 &rng, std::ofstream *traj_file)
 
                 removed_done = true;
 
-                // ---- TRAJECTORY ----
-                // log_state(age, N1, N2);
-                // -------------------------------------------
-
             } else if (removed_done && !returned_done && std::abs(age - return_age) < 1e-9) {
 
                 int return_total = static_cast<int>(
@@ -188,10 +171,6 @@ double simulate_menopause_age_population(mt19937 &rng, std::ofstream *traj_file)
                 N2 += return2;
 
                 returned_done = true;
-
-                // ---- TRAJECTORY ----
-                // log_state(age, N1, N2);
-                // -------------------------------------------
             }
             continue;
         }
@@ -222,10 +201,6 @@ double simulate_menopause_age_population(mt19937 &rng, std::ofstream *traj_file)
 
         age += dt;
 
-        // ---- TRAJECTORY ----
-        // log_state(age, N1, N2);
-        // -------------------------------------------
-
         // Safety
         if (age > 200.0) break;
     }
@@ -236,50 +211,14 @@ double simulate_menopause_age_population(mt19937 &rng, std::ofstream *traj_file)
 int main() {
     random_device rd;
     mt19937 rng(rd());
-
-    // ---- TRAJECTORY ----
-    // // Pick 5 unique simulation indices to save trajectories for
-    // vector<int> idx(num_simulations);
-    // for (int i = 0; i < num_simulations; i++) idx[i] = i;
-    // std::shuffle(idx.begin(), idx.end(), rng);
-    // vector<int> save_idx(idx.begin(), idx.begin() + 5);
-    // std::sort(save_idx.begin(), save_idx.end()); // optional: nice ordering
-    // ------------------------------------------------------------
-
+    
     ofstream menopause_file(MENOPAUSE_OUT);
     if (!menopause_file) {
         cerr << "Error opening menopause output file.\n";
         return 1;
     }
-
-    // ---- TRAJECTORY ----
-    // // Open trajectory files for the selected indices
-    // unordered_map<int, ofstream> traj_files;
-    // traj_files.reserve(5);
-    //
-    // for (int id : save_idx) {
-    //     string path = TRAJ_DIR + "trajectory_all_20,40;50,10_" + to_string(id) + ".txt";
-    //     traj_files.emplace(piecewise_construct,
-    //                        forward_as_tuple(id),
-    //                        forward_as_tuple(path));
-    //     if (!traj_files[id]) {
-    //         cerr << "Error opening trajectory file: " << path << "\n";
-    //         return 1;
-    //     }
-    // }
-    //
-    // cout << "Saving trajectories for indices: ";
-    // for (int id : save_idx) cout << id << " ";
-    // cout << "\n";
-    // --------------------------------------------
-
+    
     for (int i = 0; i < num_simulations; i++) {
-        // ---- TRAJECTORY ----
-        // ofstream *traj_ptr = nullptr;
-        // auto it = traj_files.find(i);
-        // if (it != traj_files.end()) traj_ptr = &(it->second);
-        // -------------------------------------------
-
         double menopause_age = simulate_menopause_age_population(rng, nullptr);
         menopause_file << menopause_age << "\n";
     }
