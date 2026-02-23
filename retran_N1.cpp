@@ -22,7 +22,6 @@ const double return_fraction_of_removed = 0.10;
 
 // Output paths
 const string MENOPAUSE_OUT = "your path";
-const string TRAJ_DIR = "your path";
 
 // Exact integrated hazard for lambda(t)=lambda0*exp(k t) over [t, t+dt]
 inline double integrated_lambda(double t, double dt) {
@@ -43,7 +42,6 @@ inline double choose_dt(double t, double p_target, double dt_max) {
     return dt;
 }
 
-// writes trajectory (age, N1, N2) including jumps at interventions.
 double simulate_menopause_age_population(mt19937 &rng, std::ofstream *traj_file) {
     double age = 0.0;
     int N1 = N0;
@@ -53,16 +51,6 @@ double simulate_menopause_age_population(mt19937 &rng, std::ofstream *traj_file)
     int removed_amount_N1 = 0;
     const double p_target = 1e-3;   // smaller -> closer to event-by-event, slower
     const double dt_max   = 0.25;   // years
-
-    // ---- TRAJECTORY ----
-    // auto log_state = [&](double t, int a, int b) {
-    //     if (traj_file) (*traj_file) << t << "\t" << a << "\t" << b << "\n";
-    // };
-    //
-    // if (traj_file) {
-    //     (*traj_file) << "# age\tN1\tN2\n";
-    //     log_state(age, N1, N2);
-    // }
 
     const double EPS = 1e-12;
 
@@ -91,9 +79,6 @@ double simulate_menopause_age_population(mt19937 &rng, std::ofstream *traj_file)
                 N1 -= removed_amount_N1;
                 removed_done = true;
 
-                // ---- TRAJECTORY ----
-                // log_state(age, N1, N2);
-              
             } else if (removed_done && !returned_done && std::abs(age - return_age) < 1e-9) {
                 // RETURN ONLY INTO N1 
                 int return_amount = static_cast<int>(std::round(return_fraction_of_removed * removed_amount_N1));
@@ -101,9 +86,6 @@ double simulate_menopause_age_population(mt19937 &rng, std::ofstream *traj_file)
 
                 N1 += return_amount;
                 returned_done = true;
-
-                // ---- TRAJECTORY ----
-                // log_state(age, N1, N2);
             }
             continue;
         }
@@ -133,9 +115,6 @@ double simulate_menopause_age_population(mt19937 &rng, std::ofstream *traj_file)
         N2 -= x20;
 
         age += dt;
-
-        // ---- TRAJECTORY ----
-        // log_state(age, N1, N2);
 
         // Safety
         if (age > 200.0) break;
